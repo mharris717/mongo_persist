@@ -3,6 +3,7 @@ require 'mongo'
 require 'activesupport'
 require 'fattr'
 require File.dirname(__FILE__) + "/mongo_persist/util"
+require 'andand'
 
 class Object
   def safe_to_mongo_hash
@@ -19,6 +20,9 @@ class Array
   end
   def to_mongo_object
     map { |x| x.safe_to_mongo_object }
+  end
+  def to_mongo_ref_hash
+    map { |x| x.to_mongo_ref_hash }
   end
 end
 
@@ -39,12 +43,30 @@ class Hash
     h.reject { |k,v| k == '_id' }
   end
   def to_mongo_object
-    return self unless mongo_class
+    return map_value { |v| v.safe_to_mongo_object } unless mongo_class
     if naked_reference?
       mongo_class.collection.find_one_object('_id' => get_mongo_id)
     else
       mongo_class.from_mongo_hash(to_mongo_hash_for_obj)
     end
+  end
+  def to_mongo_hash
+    res = {}
+    each { |k,v| res[k.safe_to_mongo_hash] = v.safe_to_mongo_hash }
+    res
+  end
+end
+
+class MongoWrapper
+  attr_accessor :obj
+  include FromHash
+  def save!
+    if obj.mongo_id
+      obj.klass.collection.update({'_id' => obj.mongo_id},obj.to_mongo_hash)
+    else
+      obj.mongo_id = obj.class.collection.save(obj.to_mongo_hash)
+    end
+    obj
   end
 end
 
@@ -52,16 +74,19 @@ module MongoPersist
   attr_accessor :mongo_id
   #can be overriden by class.  If not, assumes that all instance variables should be saved.
   def mongo_attributes
-    instance_variables.map { |x| x[1..-1] }
+    instance_variables.map { |x| x[1..-1] } - ['mongo']
   end
   def mongo_child_attributes
     mongo_attributes - self.class.mongo_reference_attributes
   end
+  def to_mongo_ref_hash
+    {'_mongo_class' => klass.to_s, '_id' => mongo_id}
+  end
   def to_mongo_hash
     res = mongo_child_attributes.inject({}) { |h,attr| h.merge(attr => send(attr).safe_to_mongo_hash) }.merge("_mongo_class" => self.class.to_s)
     klass.mongo_reference_attributes.each do |attr|
-      obj = send(attr)
-      res[attr] = {'_mongo_class' => obj.class.to_s, '_id' => send(attr).mongo_id}
+      val = send(attr)
+      res[attr] = val.to_mongo_ref_hash if val
     end
     res
   end
@@ -69,14 +94,7 @@ module MongoPersist
     h = h.map_value { |v| v.safe_to_mongo_object }
     from_hash(h)
   end
-  def mongo_save!
-    if mongo_id
-      klass.collection.update({'_id' => mongo_id},to_mongo_hash)
-    else
-      self.mongo_id = self.class.collection.save(to_mongo_hash)
-    end
-    self
-  end
+  fattr(:mongo) { MongoWrapper.new(:obj => self) }
   
   module ClassMethods
     dsl_method(:mongo_reference_attributes) { [] }

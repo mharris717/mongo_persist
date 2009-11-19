@@ -1,4 +1,4 @@
-= mongo_persist
+= MongoPersist
 
 Library to add MongoDB Persistance to normal Ruby objects
 
