@@ -4,47 +4,47 @@ Library to add MongoDB Persistance to normal Ruby objects
 
 = Example
 
-class Order
-  include MongoPersist
-  attr_accessor :po_number
-  fattr(:order_products) { [] }
-  def products
-    order_products.map { |x| x.product }
+  class Order
+    include MongoPersist
+    attr_accessor :po_number
+    fattr(:order_products) { [] }
+    def products
+      order_products.map { |x| x.product }
+    end
   end
-end
 
-class OrderProduct
-  include MongoPersist
-  attr_accessor :unit_price, :quantity, :product
-  mongo_reference_attributes ['product']
-end
+  class OrderProduct
+    include MongoPersist
+    attr_accessor :unit_price, :quantity, :product
+    mongo_reference_attributes ['product']
+  end
 
-class Product
-  include MongoPersist
-  attr_accessor :name
-end
+  class Product
+    include MongoPersist
+    attr_accessor :name
+  end
 
-products = [Product.new(:name => 'Leather Couch'),Product.new(:name => 'Maroon Chair')].each { |x| x.mongo_save! }
+  products = [Product.new(:name => 'Leather Couch'),Product.new(:name => 'Maroon Chair')].each { |x| x.mongo_save! }
 
-orders = []
-orders << Order.new(:po_number => 1234, :order_products => [OrderProduct.new(:unit_price => 1000, :quantity => 1, :product => products[0])]).mongo_save!
-orders << Order.new(:po_number => 1235, :order_products => [OrderProduct.new(:unit_price => 200, :quantity => 2, :product => products[1])]).mongo_save!
+  orders = []
+  orders << Order.new(:po_number => 1234, :order_products => [OrderProduct.new(:unit_price => 1000, :quantity => 1, :product => products[0])]).mongo_save!
+  orders << Order.new(:po_number => 1235, :order_products => [OrderProduct.new(:unit_price => 200, :quantity => 2, :product => products[1])]).mongo_save!
 
-# objects are saved to MongoDB as JSON objects
+  # objects are saved to MongoDB as JSON objects
 
-# get all order objects back from Mongo
-# you get back the ruby objects you put in, not raw JSON objects
-Order.collection.find_objects 
+  # get all order objects back from Mongo
+  # you get back the ruby objects you put in, not raw JSON objects
+  Order.collection.find_objects 
 
-# Since on OrderProduct, the product attribute was marked as a reference attribute, the product is stored in MongoDB only as a reference to the product obj
-# When you read the Order/OrderProduct back out, MongoPersist takes care of fetching the Product object again.  You don't have to do anything.
-Order.collection.find_one_object.products.first # An object of class Product
-Order.collection.find_one_object.products.first.name  # Leather Couch
+  # Since on OrderProduct, the product attribute was marked as a reference attribute, the product is stored in MongoDB only as a reference to the product obj
+  # When you read the Order/OrderProduct back out, MongoPersist takes care of fetching the Product object again.  You don't have to do anything.
+  Order.collection.find_one_object.products.first # An object of class Product
+  Order.collection.find_one_object.products.first.name  # Leather Couch
 
-# Because the product is stored as a reference, if you update that product elsewhere and save to Mongo, later reads of Orders with that product will be correctly updated
-products[0].name = 'White Leather Couch'
-products[0].mongo_save!
-Order.collection.find_one_object.products.first.name  # White Leather Couch
+  # Because the product is stored as a reference, if you update that product elsewhere and save to Mongo, later reads of Orders with that product will be correctly updated
+  products[0].name = 'White Leather Couch'
+  products[0].mongo_save!
+  Order.collection.find_one_object.products.first.name  # White Leather Couch
 
 
 == Note on Patches/Pull Requests
