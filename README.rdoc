@@ -36,12 +36,16 @@ Library to add MongoDB Persistance to normal Ruby objects
   # you get back the ruby objects you put in, not raw JSON objects
   Order.collection.find_objects 
 
-  # Since on OrderProduct, the product attribute was marked as a reference attribute, the product is stored in MongoDB only as a reference to the product obj
-  # When you read the Order/OrderProduct back out, MongoPersist takes care of fetching the Product object again.  You don't have to do anything.
+  # Since on OrderProduct, the product attribute was marked as a reference attribute, 
+  # the product is stored in MongoDB only as a reference to the product obj
+  #
+  # When you read the Order/OrderProduct back out, MongoPersist takes care of 
+  # fetching the Product object again.  You don't have to do anything.
   Order.collection.find_one_object.products.first # An object of class Product
   Order.collection.find_one_object.products.first.name  # Leather Couch
 
-  # Because the product is stored as a reference, if you update that product elsewhere and save to Mongo, later reads of Orders with that product will be correctly updated
+  # Because the product is stored as a reference, if you update that product 
+  # elsewhere and save to Mongo, later reads of Orders with that product will be correctly updated
   products[0].name = 'White Leather Couch'
   products[0].mongo_save!
   Order.collection.find_one_object.products.first.name  # White Leather Couch
