@@ -16,6 +16,8 @@ Library to add MongoDB Persistance to normal Ruby objects
   class OrderProduct
     include MongoPersist
     attr_accessor :unit_price, :quantity, :product
+    
+    # Store a reference to objects for this attribute, not the entire object.
     mongo_reference_attributes ['product']
   end
 
