@@ -4,6 +4,10 @@ Library to add MongoDB Persistance to normal Ruby objects
 
 = Example
 
+  require 'rubygems'
+  require 'mongo'
+  require 'mongo_persist'
+
   class Order
     include MongoPersist
     attr_accessor :po_number
