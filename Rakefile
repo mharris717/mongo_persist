@@ -11,6 +11,9 @@ begin
     gem.homepage = "http://github.com/mharris717/mongo_persist"
     gem.authors = ["Mike Harris"]
     gem.add_development_dependency "rspec"
+    gem.add_dependency 'fattr'
+    gem.add_dependency 'activesupport'
+    gem.add_dependency 'mongo'
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
