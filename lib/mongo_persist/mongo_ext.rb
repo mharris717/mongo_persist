@@ -9,11 +9,15 @@ class ObjCursor
   end
 end
 
-class Mongo::Collection
+module MongoPersistCollection
   def find_objects(*args)
     ObjCursor.new(:cursor => find(*args))
   end
   def find_one_object(*args)
     find_one(*args).to_mongo_object
   end
+end
+
+class Mongo::Collection
+  include MongoPersistCollection
 end
