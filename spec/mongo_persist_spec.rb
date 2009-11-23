@@ -1,7 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 def on_rcr?
-  !!(File.dirname(__FILE__) =~ /\/mnt\/repos/)
+  dir = File.dirname(__FILE__)
+  !!(dir =~ /\/mnt\/repos/).tap { |x| puts "Dir #{dir} rcr? #{res}" }
 end
 
 def db
