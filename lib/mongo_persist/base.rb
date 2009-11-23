@@ -19,7 +19,7 @@ module MongoPersist
   attr_accessor :mongo_id
   #can be overriden by class.  If not, assumes that all instance variables should be saved.
   def mongo_attributes
-    (instance_variables.map { |x| x[1..-1] } - ['mongo']).select { |x| respond_to?(x) }
+    (instance_variables.map { |x| x[1..-1] } - ['mongo','mongo_id']).select { |x| respond_to?(x) }
   end
   def mongo_child_attributes
     mongo_attributes - self.class.mongo_reference_attributes
