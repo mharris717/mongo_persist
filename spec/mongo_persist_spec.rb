@@ -1,7 +1,16 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
+def on_rcr?
+  !!(File.dirname(__FILE__) =~ /\/mnt\/repos/)
+end
+
 def db
-  Mongo::Connection.new.db('test-db')
+  if on_rcr?
+    require File.dirname(__FILE__) + "/mocks"
+    MockDB.new
+  else
+    Mongo::Connection.new.db('test-db')
+  end
 end
 
 class Order
@@ -84,6 +93,6 @@ describe MongoPersist do
     o = Order.new(:po_number => 1, :some_hash => {'1' => Product.new(:name => 'Chair')})
     o.mongo.save!
     Order.collection.find_one_object(:po_number => 1).some_hash['1'].name.should == 'Chair'
-    Order.collection.find_one_object.subtotal.should == 1000
+    Order.collection.find_one_object(:po_number => 1234).subtotal.should == 1000
   end
 end
