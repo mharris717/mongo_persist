@@ -49,6 +49,17 @@ class Customer
   attr_accessor :email
 end
 
+class Foo
+  include MongoPersist
+  attr_accessor :bar
+  def initialize(b)
+    @bar = b
+  end
+  def self.fgrom_mongo_hash(ops)
+    new(nil).from_hash(ops)
+  end
+end
+if true
 # too many assertions per test, too many "this is how things should be before i check the point of this test" assertions
 describe MongoPersist do
   before do
