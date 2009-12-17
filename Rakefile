@@ -11,6 +11,7 @@ begin
     gem.homepage = "http://github.com/mharris717/mongo_persist"
     gem.authors = ["Mike Harris"]
     gem.add_development_dependency "rspec"
+    gem.add_development_dependency 'rr'
     gem.add_dependency 'fattr'
     gem.add_dependency 'activesupport'
     gem.add_dependency 'mharris_ext'
