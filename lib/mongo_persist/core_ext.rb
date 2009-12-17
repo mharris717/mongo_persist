@@ -1,9 +1,15 @@
 class Object
   def safe_to_mongo_hash
-    to_mongo_hash
+    respond_to?(:to_mongo_hash) ? to_mongo_hash : nil
   end
   def safe_to_mongo_object
     to_mongo_object
+  end
+  def ngil_obj?
+    self == MongoPersist::NIL_OBJ
+  end
+  def can_mongo_convert?
+    false
   end
 end
 
@@ -13,6 +19,9 @@ module BaseObjects
   end
   def to_mongo_object
     self
+  end
+  def can_mongo_convert?
+    true
   end
 end
 
