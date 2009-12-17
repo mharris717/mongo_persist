@@ -21,8 +21,11 @@ module MongoPersist
   def mongo_attributes
     (instance_variables.map { |x| x[1..-1] } - ['mongo','mongo_id']).select { |x| respond_to?(x) }
   end
+  def mongo_addl_attributes
+    []
+  end
   def mongo_child_attributes
-    mongo_attributes - self.class.mongo_reference_attributes
+    (mongo_attributes - self.class.mongo_reference_attributes + mongo_addl_attributes).uniq
   end
   def to_mongo_ref_hash
     {'_mongo_class' => klass.to_s, '_id' => mongo_id}

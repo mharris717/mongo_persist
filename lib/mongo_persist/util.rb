@@ -44,6 +44,9 @@ module FromHash
   end
   def initialize(ops={})
     from_hash(ops)
+    after_initialize
+  end
+  def after_initialize
   end
 end
 
@@ -51,6 +54,11 @@ class Hash
   def map_value
     res = {}
     each { |k,v| res[k] = yield(v) }
+    res
+  end
+  def map_key
+    res = {}
+    each { |k,v| res[yield(k)] = v }
     res
   end
 end

@@ -15,7 +15,7 @@ module MongoHash
     h.reject { |k,v| k == '_id' }
   end
   def to_mongo_object
-    return map_value { |v| v.safe_to_mongo_object } unless mongo_class
+    return map_value { |v| v.safe_to_mongo_object }.map_key { |k| k.from_mongo_key } unless mongo_class
     if naked_reference?
       mongo_class.collection.find_one_object('_id' => get_mongo_id)
     else
@@ -24,7 +24,7 @@ module MongoHash
   end
   def to_mongo_hash
     res = {}
-    each { |k,v| res[k.safe_to_mongo_hash] = v.safe_to_mongo_hash }
+    each { |k,v| res[k.safe_to_mongo_hash.to_mongo_key] = v.safe_to_mongo_hash }
     res
   end
 end

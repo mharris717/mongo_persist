@@ -25,3 +25,24 @@ class NilClass
     self
   end
 end
+
+class Object
+  def to_mongo_key
+    self
+  end
+  def from_mongo_key
+    self
+  end
+end
+
+class Fixnum
+  def to_mongo_key
+    "#{self}-NUM"
+  end
+end
+
+class String
+  def from_mongo_key
+    (self =~ /^(.*)-NUM$/) ? $1.to_i : self
+  end
+end
