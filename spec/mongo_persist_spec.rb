@@ -1,8 +1,11 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
+require_lib "/code/mongo_scope/lib/mongo_scope"
+require 'mharris_ext'
+
 def on_rcr?
   dir = File.expand_path(File.dirname(__FILE__))
-  !!(dir =~ /\/mnt\/repos/).tap { |x| puts "Dir #{dir} rcr? #{x}" }
+  !!(dir =~ /\/mnt\/repos/)#.tap { |x| puts "Dir #{dir} rcr? #{x}" }
 end
 
 def db
@@ -96,4 +99,79 @@ describe MongoPersist do
     Order.collection.find_one_object(:po_number => 1).some_hash['1'].name.should == 'Chair'
     Order.collection.find_one_object(:po_number => 1234).subtotal.should == 1000
   end
+  it 'saving reference hashes' do
+    p = Product.new(:name => 'Chair')
+    p.mongo.save!
+    o = Order.new(:po_number => 1, :some_hash => {'1' => p})
+    o.mongo.save!
+    Order.collection.find_one_object(:po_number => 1).some_hash['1'].name.should == 'Chair'
+    Order.collection.find_one_object(:po_number => 1234).subtotal.should == 1000
+  end
+  it 'obj with own constructor' do
+    Foo.collection.remove
+    Foo.new(14).mongo.save!
+    Foo.collection.find_one_object.bar.should == 14
+  end
+  it 'hash with number key' do
+    Foo.collection.remove
+    f = Foo.new(14)
+    f.bar = {1 => 2}
+    f.mongo.save!
+    Foo.collection.find_one_object.bar.keys.should == [1]
+  end
+  it 'grouping' do
+   if false; coll = db.collection('abc')
+    coll.remove
+    coll.save('a' => 'a', 'b' => 1)
+    coll.save("a" => 'a', 'b' => 3)
+    coll.save('a' => 'b', 'b' => 2)
+
+    # reduce_function = "function (obj, prev) { prev.count += obj.b; }"
+    # code = Mongo::Code.new(reduce_function)
+    # res = coll.group(['a'], {}, {"count" => 0},code)
+    
+    res = coll.sum_by_raw(:key => 'a', :sum_field => 'b')
+    
+    res.find { |x| x['a'] == 'a'}['count'].should == 4
+    res.find { |x| x['a'] == 'b'}['count'].should == 2
+    
+    res = coll.sum_by(:key => 'a', :sum_field => 'b').should == {'a' => 4, 'b' => 2}; end
+  end
 end
+end
+describe "n+1" do
+  before do
+    $proxy = true
+    [Order,Product].each { |x| x.collection.remove }
+    @products = [Product.new(:name => 'Leather Couch'),Product.new(:name => 'Maroon Chair')].each { |x| x.mongo.save! }
+    #@products = (1..5000).map { |x| Product.new(:name => x.to_s) }
+    @products.each { |x| x.mongo.save! }
+    @order_products = @products.map { |x| OrderProduct.new(:product => x) }
+    @order = Order.new(:order_products => @order_products).mongo.save!
+  end
+  it 'loading products should only do 1 lookup' do
+    mock.proxy(Product.collection).find()
+    Order.collection.find_one_object.products.map { |x| x.name }.should == @products.map { |x| x.name }
+  end
+  it 'speed test' do
+    tm('with proxy') do
+      Order.collection.find_one_object.products.each { |x| x.name }
+    end
+    tm('without proxy') do
+      $proxy = false
+      Order.collection.find_one_object.products.each { |x| x.name }
+    end
+  end
+end
+
+class Mongo::Collection
+  def sum_by_raw(ops)
+    reduce_function = "function (obj, prev) { prev.count += (obj.#{ops[:sum_field]} ? obj.#{ops[:sum_field]} : 0); }"
+    code = Mongo::Code.new(reduce_function)
+    group([ops[:key]].flatten, {'a' => 'a'}, {"count" => 0},code)
+  end
+  def sum_by(ops)
+    sum_by_raw(ops).inject({}) { |h,a| k = ops[:key]; h.merge(a[k] => a['count'])}
+  end
+end
+
