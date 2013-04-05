@@ -25,7 +25,7 @@ module BaseObjects
   end
 end
 
-[Numeric,Symbol,String,Mongo::ObjectID,TrueClass,FalseClass].each do |cls|
+[Numeric,Symbol,String,BSON::ObjectId,TrueClass,FalseClass].each do |cls|
   cls.send(:include,BaseObjects)
 end
 

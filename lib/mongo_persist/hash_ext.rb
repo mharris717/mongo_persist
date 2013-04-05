@@ -27,6 +27,10 @@ module MongoHash
     each { |k,v| res[k.safe_to_mongo_hash.to_mongo_key] = v.safe_to_mongo_hash }
     res
   end
+
+  def can_mongo_convert?
+    all? { |k,x| x.can_mongo_convert? && x }
+  end
 end
 
 class Hash

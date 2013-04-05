@@ -12,3 +12,9 @@ class Array
     all? { |x| x.can_mongo_convert? && x }
   end
 end
+
+class Array
+  def sum
+    inject { |s,i| s + i }
+  end
+end

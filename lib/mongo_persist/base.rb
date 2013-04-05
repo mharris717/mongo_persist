@@ -13,6 +13,10 @@ class MongoWrapper
     pp obj.to_mongo_hash
     raise exp
   end
+
+  def get_fresh
+    obj.klass.collection.find_one_object("_id" => obj.mongo_id)
+  end
 end
 
 module MongoPersist
@@ -43,7 +47,7 @@ module MongoPersist
   def to_mongo_hash
     res = mongo_child_attributes.inject({}) do |h,attr| 
       obj = send(attr)
-      raise "#{attr} is nil" unless obj
+      #raise "#{attr} is nil" unless obj
       new_hashx(attr,h,obj)
     end.merge("_mongo_class" => self.class.to_s)
     klass.mongo_reference_attributes.each do |attr|
@@ -57,6 +61,10 @@ module MongoPersist
     from_hash(h)
   end
   fattr(:mongo) { MongoWrapper.new(:obj => self) }
+
+  def can_mongo_convert?
+    true
+  end
   
   module ClassMethods
     dsl_method(:mongo_reference_attributes) { [] }
@@ -69,7 +77,9 @@ module MongoPersist
       new(*args)
     end
     def from_mongo_hash(h)
-      new_with_nil_args.tap { |x| x.from_mongo_hash(h) }
+      res = new_with_nil_args.tap { |x| x.from_mongo_hash(h) }
+      res.after_mongo_load if res.respond_to?(:after_mongo_load)
+      res
     end
     def mongo_connection(ops)
       ops.each { |k,v| send("#{k}=",v) }

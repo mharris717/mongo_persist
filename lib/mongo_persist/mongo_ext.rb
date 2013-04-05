@@ -4,6 +4,11 @@ class ObjCursor
   def each
     cursor.each { |x| yield(x.to_mongo_object) }
   end
+  def to_a
+    res = []
+    each { |x| res << x }
+    res
+  end
   def count
     cursor.count
   end
