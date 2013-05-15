@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "mongo_persist"
-  s.version = "0.2.0"
+  s.version = "0.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Mike Harris"]
-  s.date = "2013-04-05"
+  s.date = "2013-05-15"
   s.description = "mongo_persist"
   s.email = "mharris717@gmail.com"
   s.extra_rdoc_files = [
